@@ -1,0 +1,8 @@
+image: gradle:alpine
+
+stages:
+  - compile
+
+compile:
+  stage: compile
+  script: ./gradlew compileTestJava
