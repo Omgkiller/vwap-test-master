@@ -5,22 +5,22 @@ import java.util.Queue;
  class VwapQueue
 {
     private double vwap = 0.0;
-    private static final int capacity = 5;
-    private Queue<PricingData> vwapQueue;
+    private final int rollingWindowCapacity;
+    private final Queue<PricingData> vwapQueue;
 
-    VwapQueue(Queue<PricingData> vwapQueue)
+    VwapQueue(Queue<PricingData> vwapQueue, int rollingWindowCapacity)
     {
         this.vwapQueue = vwapQueue;
+        this.rollingWindowCapacity = rollingWindowCapacity;
     }
 
-    boolean add(PricingData pricingData)
-    {
-        if (vwapQueue.size() >= capacity)
+    synchronized boolean add(PricingData pricingData) {
+        if (vwapQueue.size() >= rollingWindowCapacity)
         {
-            vwapQueue.remove();
+            vwapQueue.poll();
         }
         boolean canAdd = vwapQueue.add(pricingData);
-        this.vwap = calVwap();
+        recalculateVwap();
         return canAdd;
     }
 
@@ -28,17 +28,20 @@ import java.util.Queue;
         return vwap;
     }
 
-    private double calVwap()
-    {
-        double vwp = vwapQueue.stream().map(pricingData -> pricingData.price * pricingData.quantity).reduce(Double::sum).orElse(0.0);
-        double quantitySum =  vwapQueue.stream().map(pricingData -> pricingData.quantity).reduce(Double::sum).orElse(1.0);
-        return vwp/quantitySum;
+    private void recalculateVwap() {
+        double sumPriceQuantity = 0.0;
+        double sumQuantity = 0.0;
+        for (PricingData data : vwapQueue) {
+            sumPriceQuantity += data.price * data.quantity;
+            sumQuantity += data.quantity;
+        }
+        vwap = sumPriceQuantity / sumQuantity;
     }
 
     static class PricingData
     {
-        private double price;
-        private double quantity;
+        private final double price;
+        private final double quantity;
 
         PricingData(long quantity, double price)
         {
