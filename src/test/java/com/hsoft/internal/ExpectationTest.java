@@ -55,7 +55,7 @@ public class ExpectationTest {
     assertFalse(l.h(), () -> "no more event expected" + l.n());
   }
 
-  private static final double EPSILON = 0.00001;
+  public static final double EPSILON = 0.00001;
 
   private void m(double theo, double vwap) {
     assertTrue(l.h(), "expected more event");
